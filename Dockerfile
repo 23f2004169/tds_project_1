@@ -12,10 +12,21 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 # Ensure the installed binary is on the `PATH`
 ENV PATH="/root/.local/bin/:$PATH"
 
-RUN pip install fastapi requests uvicorn
-
+# Set the working directory
 WORKDIR /app
 
+# Copy the requirements file
+COPY requirements.txt .
+
+# Create a virtual environment and install dependencies
+RUN python -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Set the entry point to use the virtual environment
+ENV PATH="/app/venv/bin:/root/.local/bin/:$PATH"
+
+# Copy the application code
 COPY app.py /app
 
-CMD ["uv", "run", "app.py" ]
+# Command to run the application
+CMD ["uv", "run","app.py"]
