@@ -14,6 +14,10 @@ import os
 import json
 from fastapi.exceptions import HTTPException
 import subprocess
+from dotenv import load_dotenv
+load_dotenv()
+AIPROXY_TOKEN=os.getenv("AIPROXY_TOKEN")
+
 
 app = FastAPI()
 app.add_middleware(
@@ -50,7 +54,6 @@ tools = [
     }
 ]
 
-AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
 
 
 @app.get('/')
@@ -62,12 +65,13 @@ def home():
 def read_file(path: str):
     try:
         with open(path, "r") as f:
+            print(f"Reading file: {path}")
             return f.read()
     except Exception as e:
         raise HTTPException(status_code=404, detail="File does not exist")
 
 
-def install_and_run_script(script_url: str, user_email: str):
+def task_a2(script_url: str, user_email: str):
     # Check if 'uv' is installed
     try:
         subprocess.run(['uv', '--version'], check=True)
@@ -94,11 +98,13 @@ def install_and_run_script(script_url: str, user_email: str):
 
 @app.post("/run")
 def task_runner(task: str):
-    if "uv" in task:
+    print("CURRENT TASK RUNNER", task)
+    if task.startswith("run"): 
         try:
+            print('Currently running task dategnpy:', task)
             # Parse the task string
             _, script_url, user_email = task.split()
-            install_and_run_script(script_url, user_email)
+            task_a1(script_url, user_email)
             return {"status": "Script executed successfully"}
         except Exception as e:
             raise HTTPException(
@@ -113,22 +119,44 @@ def task_runner(task: str):
         "model": "gpt-4o-mini",
         "messages": [
             {
-                "role": "user",
-                "content": task
-            },
-            {
                 "role": "system",
                 "content": """
                    Your task is to answer the question based on the context provided.
                    """
+            },
+             {
+                "role": "user",
+                "content": task
             }
         ],
         "tools": tools,
         "tool_choice": "auto"
     }
-    response = requests.post(url=url, headers=headers, json=data)
-    arguments = response.json()['choices'][0]['message']['tool_calls'][0]['function']['arguments']
-    return arguments
+    try:
+        response = requests.post(url=url, headers=headers, json=data)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+
+        # Parse the response JSON
+        response_data = response.json()
+
+        # Safely extract the arguments from the response
+        tool_calls = response_data.get('choices', [])[0].get('message', {}).get('tool_calls', [])
+        if not tool_calls:
+            raise ValueError("No ability calls found in the response")
+
+        arguments = tool_calls[0].get('function', {}).get('arguments', {})
+        return {"status": "success", "message": json.loads(arguments)}
+    except requests.exceptions.RequestException as e:
+        # Handle HTTP request errors
+        raise HTTPException(status_code=500, detail=f"HTTP request failed: {str(e)}")
+
+    except (KeyError, ValueError, json.JSONDecodeError) as e:
+        # Handle JSON parsing or missing data errors
+        raise HTTPException(status_code=500, detail=f"Failed to parse response: {str(e)}")
+    # response = requests.post(url=url, headers=headers, json=data)
+    # print(response.json())
+    # arguments = response.json()['choices'][0]['message']['tool_calls'][0]['function']['arguments']
+    # return {"status": "success", "message": json.loads(arguments)}
 
 
 if __name__ == '__main__':
