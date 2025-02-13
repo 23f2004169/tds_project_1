@@ -3,6 +3,19 @@ FROM python:3.12-slim-bookworm
 # The installer requires curl (and certificates) to download the release archive
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
+# Install Node.js (which includes npm and npx)
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs
+
+# Verify Node.js, npm, and npx installation
+RUN node --version && npm --version && npx --version
+
+# Install Prettier version 3.4.2 globally
+RUN npm install -g prettier@3.4.2
+
+# Verify Prettier installation
+RUN prettier --version
+
 # Download the latest installer
 ADD https://astral.sh/uv/install.sh /uv-installer.sh
 
@@ -27,6 +40,8 @@ ENV PATH="/app/venv/bin:/root/.local/bin/:$PATH"
 
 # Copy the application code
 COPY app.py /app
+COPY evaluate.py /app
+COPY datagen.py /app
 
 # Command to run the application
-CMD ["uv", "run","app.py"]
+CMD ["python3", "app.py"]

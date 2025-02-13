@@ -65,7 +65,6 @@ async def read(path: str):
             raise Exception(f"Cannot read {path}")
         return response.text
 
-
 async def a1(email: str, **kwargs):
     await run(
         f"""
@@ -78,21 +77,26 @@ with `{email}` as the only argument
 
 async def a2(email: str, file: str = "/data/format.md", **kwargs):
     original = get_markdown(email)
-    expected = subprocess.run(
-        ["npx", "prettier@3.4.2", "--stdin-filepath", file],
-        input=original,
-        capture_output=True,
-        text=True,
-        check=True,
-        # Ensure npx is picked up from the PATH on Windows
-        shell=True,
-    ).stdout
+    try:
+        expected = subprocess.run(
+            ["npx", "prettier@3.4.2", "--stdin-filepath", file],
+            input=original,
+            capture_output=True,
+            text=True,
+            check=True
+            # Ensure npx is picked up from the PATH on Windows
+        )
+        expected = expected.stdout
+    
+    except subprocess.CalledProcessError as e:
+        print("Error:", e.stderr)
     result = await run(
         f"""
 Format the contents of `{file}` using `prettier@3.4.2`, updating the file in-place
 """
     )
-    result = await read(file)
+    with open(file, "r") as f:
+        result=f.read()
     if result != expected:
         return mismatch(file, expected, result)
     return True
