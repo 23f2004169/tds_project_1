@@ -202,6 +202,38 @@ def sort_contacts(input_file: str, output_file: str):
 #         json.dump(sorted_contacts, f)
 #     return f"A4 Completed: Sorted contacts stored in {output_file}"
 
+#TASK 5 : Write the first line of the 10 most recent .log file in /data/logs/ to /data/logs-recent.txt, most recent first
+#TASK 6
+import os
+import json
+
+def markdown(inputfile, outputfile):
+    """
+    Creates an index JSON file mapping Markdown filenames to their first H1 titles.
+
+    Args:
+        inputfile (str): The base directory containing Markdown files.
+        outputfile (str): The path to the output JSON file.
+    """
+    # Initialize the index dictionary
+    index = {}
+    # Walk through the directory to find all .md files
+    for root, _, files in os.walk(inputfile):
+        for file in files:
+            if file.endswith(".md"):
+                file_path = os.path.join(root, file)
+                relative_path = os.path.relpath(file_path, inputfile)
+                # Read the file and extract the first H1
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.startswith("# "):  # Check for H1
+                            title = line[2:].strip()  # Remove "# " and strip whitespace
+                            index[relative_path] = title
+                            break
+    # Write the index to the output JSON file
+    with open(outputfile, "w", encoding="utf-8") as f:
+        json.dump(index, f, indent=4)
+    print(f"Index file created at {outputfile}")
 @app.post("/run")
 def task_runner(task: str):
     if 'run' in task.lower():
@@ -238,7 +270,6 @@ def task_runner(task: str):
             # Find the input and output file paths
             input_file = task.split("`")[1]  # Extract the first file path
             output_file = task.split("`")[7] 
-            print(task.split("`"))
             #strip the backticks in file paths
             # Debug: Log the extracted file paths
             print("Extracted file paths:", input_file, output_file)
@@ -247,8 +278,19 @@ def task_runner(task: str):
         except Exception as e:
             raise HTTPException(
                 status_code=400, detail=f"Invalid task format: {str(e)}")
-
-
+    elif "logs" in task.lower():
+        pass
+    elif "markdown" in task.lower():
+        try:
+            # Extract the input file and output file paths
+            inputfile = task.split("`")[1]  # Extract the first file path
+            outputfile = task.split("`")[3]  # Extract the second file path
+            # Call the function with the extracted parameters
+            markdown(inputfile, outputfile)
+            return {"status": "Markdown files indexed successfully"}
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid task format: {str(e)}")
 
     url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
     headers = {
