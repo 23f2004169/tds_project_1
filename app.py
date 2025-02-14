@@ -71,7 +71,7 @@ def read_file(path: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail="File does not exist")
 
-
+#TASK A1
 def install_and_run_script(script_url: str, user_email: str):
     try:
         subprocess.run(['uv', '--version'], check=True)
@@ -88,8 +88,8 @@ def install_and_run_script(script_url: str, user_email: str):
         raise HTTPException(
             status_code=500, detail=f"Failed to run script: {str(e)}")
  
-
-def a2(file: str = "/data/format.md"):
+#TASK A2
+def format(file: str = "/data/format.md"):
     with open(file, "r") as f:
         original = f.read()
     try:
@@ -107,11 +107,12 @@ def a2(file: str = "/data/format.md"):
         print(f"Error formatting file: {e.stderr}")
         return False
     
+#TASK A3    
 def count_weekdays(input_file: str, output_file: str, weekday: str):
     """
     Count occurrences of a specific weekday in a file and write the count to an output file.
     """
-    weekdays = ["Monday", "Tuesday", "Wednesdays", "Thursday", "Friday", "Saturday", "Sunday"]
+    weekdays = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"]
     weekday_index = weekdays.index(weekday)
 
     # List of all possible date formats in the dataset
@@ -155,9 +156,52 @@ def count_weekdays(input_file: str, output_file: str, weekday: str):
     print("result",result, type(result))
     with open(output_file, "w") as file:
         file.write(result)  
-
     return count
   
+#TASK A4
+import json
+
+# def sort_contacts(input_file: str, output_file: str):
+#     with open(input_file, "r") as file:
+#         contacts = json.load(file)
+#     # Sort the contacts by last_name, then first_name 
+#     contacts.sort(key=lambda c: (c["last_name"], c["first_name"]))
+#     contacts_repr = repr(contacts)
+#     with open(output_file, "w") as file:
+#         file.write(contacts_repr)
+#     return contacts
+
+import json
+
+def sort_contacts(input_file: str, output_file: str):
+    """
+    Reads contacts from the input file, sorts them by last_name and first_name,
+    and writes the sorted contacts to the output file as valid JSON.
+    """
+    # Read the contacts from the input file
+    with open(input_file, "r") as file:
+        contacts = json.load(file)
+
+    # Sort the contacts by last_name, then first_name
+    contacts.sort(key=lambda c: (c["last_name"], c["first_name"]))
+
+    # Write the sorted contacts to the output file as valid JSON
+    with open(output_file, "w") as file:
+        json.dump(contacts, file, indent=4, sort_keys=True)  # Correctly write JSON to the file
+
+    return contacts
+# def sort_contacts(input_file: str, output_file: str):
+#     input_file = f".{input_file}"
+#     if not os.path.exists(input_file):
+#         raise ValueError(f"File {input_file} does not exist.")
+#     with open(input_file, "r") as f:
+#         contacts = json.load(f)
+#     sorted_contacts = sorted(contacts, key=lambda c: (c.get("last_name", ""), c.get("first_name", "")))
+#     output_file = output_file[5:]
+#     with open(f"./data/{output_file}", "w") as f:
+#         json.dump(sorted_contacts, f)
+#     return f"A4 Completed: Sorted contacts stored in {output_file}"
+
 @app.post("/run")
 def task_runner(task: str):
     if 'run' in task.lower():
@@ -171,12 +215,12 @@ def task_runner(task: str):
                 status_code=400, detail=f"Invalid task format: {str(e)}")
     elif "format" in task.lower():
         try:
-            return a2(file="/data/format.md") 
+            return format(file="/data/format.md") 
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to format file: {str(e)}"
             )
-    elif "Count" in task:
+    elif "count" in task.lower():
         try:
             # Extract the input file, output file, and weekday from the task string
             input_file = task.split("`")[1]  # Extract the first file path
@@ -189,6 +233,21 @@ def task_runner(task: str):
         except Exception as e:
             raise HTTPException(
                 status_code=400, detail=f"Invalid task format: {str(e)}")
+    elif "contacts" in task.lower():
+        try:
+            # Find the input and output file paths
+            input_file = task.split("`")[1]  # Extract the first file path
+            output_file = task.split("`")[7] 
+            print(task.split("`"))
+            #strip the backticks in file paths
+            # Debug: Log the extracted file paths
+            print("Extracted file paths:", input_file, output_file)
+            sort_contacts(input_file, output_file)
+            return {"status": "Contacts sorted successfully"}
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid task format: {str(e)}")
+
 
 
     url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
