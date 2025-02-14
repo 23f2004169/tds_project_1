@@ -172,7 +172,6 @@ import json
 #     return contacts
 
 import json
-
 def sort_contacts(input_file: str, output_file: str):
     """
     Reads contacts from the input file, sorts them by last_name and first_name,
@@ -181,15 +180,13 @@ def sort_contacts(input_file: str, output_file: str):
     # Read the contacts from the input file
     with open(input_file, "r") as file:
         contacts = json.load(file)
-
     # Sort the contacts by last_name, then first_name
     contacts.sort(key=lambda c: (c["last_name"], c["first_name"]))
-
     # Write the sorted contacts to the output file as valid JSON
     with open(output_file, "w") as file:
         json.dump(contacts, file, indent=4, sort_keys=True)  # Correctly write JSON to the file
-
     return contacts
+
 # def sort_contacts(input_file: str, output_file: str):
 #     input_file = f".{input_file}"
 #     if not os.path.exists(input_file):
@@ -268,10 +265,8 @@ def task_runner(task: str):
     elif "contacts" in task.lower():
         try:
             # Find the input and output file paths
-            input_file = task.split("`")[1]  # Extract the first file path
+            input_file = task.split("`")[1]  
             output_file = task.split("`")[7] 
-            #strip the backticks in file paths
-            # Debug: Log the extracted file paths
             print("Extracted file paths:", input_file, output_file)
             sort_contacts(input_file, output_file)
             return {"status": "Contacts sorted successfully"}
