@@ -14,6 +14,7 @@ import os
 import json
 from fastapi.exceptions import HTTPException
 import subprocess
+from datetime import datetime
 # from dotenv import load_dotenv
 
 # load_dotenv()
@@ -86,35 +87,7 @@ def install_and_run_script(script_url: str, user_email: str):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to run script: {str(e)}")
-
-# def task_a2():
-#     # Check if 'prettier' is installed
-#     try:
-#         subprocess.run(['prettier', '--version'], check=True)
-#     except FileNotFoundError:
-#         # Install 'prettier@3.4.2' if not installed
-#         try:
-#             subprocess.run(['npm', 'install', '-g', 'prettier@3.4.2'], check=True)
-#         except Exception as e:
-#             raise HTTPException(
-#                 status_code=500, detail=f"Failed to install prettier: {str(e)}"
-#             )
-
-#     # Format the file using prettier
-#     file_path = '/data/format.md'
-#     try:
-#         subprocess.run(['prettier', '--write', file_path], check=True)
-#         return {"status": "File formatted successfully"}
-#     except subprocess.CalledProcessError as e:
-#         raise HTTPException(
-#             status_code=500, detail=f"Failed to format file: {str(e)}"
-#         )
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500, detail=f"An unexpected error occurred: {str(e)}"
-#         )
-    
-import subprocess
+ 
 
 def a2(file: str = "/data/format.md"):
     with open(file, "r") as f:
@@ -126,7 +99,6 @@ def a2(file: str = "/data/format.md"):
             capture_output=True,
             text=True,
             check=True
-            # Ensure npx is picked up from the PATH on Windows
         )
         expected = expected.stdout
         with open(file, "w") as f:
@@ -135,9 +107,60 @@ def a2(file: str = "/data/format.md"):
         print(f"Error formatting file: {e.stderr}")
         return False
     
+def count_weekdays(input_file: str, output_file: str, weekday: str):
+    """
+    Count occurrences of a specific weekday in a file and write the count to an output file.
+    """
+    weekdays = ["Monday", "Tuesday", "Wednesdays", "Thursday", "Friday", "Saturday", "Sunday"]
+    weekday_index = weekdays.index(weekday)
+
+    # List of all possible date formats in the dataset
+    date_formats = [
+        "%Y-%m-%d",          # e.g., 2023-02-14
+        "%b %d, %Y",         # e.g., Mar 21, 2009
+        "%d-%b-%Y",          # e.g., 26-Jan-2020
+        "%d/%m/%Y",          # e.g., 14/02/2025
+        "%m/%d/%Y",          # e.g., 02/14/2025
+        "%d %B %Y",          # e.g., 14 February 2025
+        "%B %d, %Y",         # e.g., February 14, 2025
+        "%Y/%m/%d %H:%M:%S", # e.g., 2023/06/20 15:18:46
+        "%Y/%m/%d",          # e.g., 2023/06/20
+        "%d-%m-%Y",          # e.g., 14-02-2025
+        "%d/%b/%Y",          # e.g., 14/Feb/2025
+        "%d-%B-%Y",          # e.g., 14-February-2025
+        "%d-%m-%y",          # e.g., 14-02-25
+        "%d/%m/%y",          # e.g., 14/02/25
+    ]
+
+    def parse_date(date_str):
+        """Try parsing a date string with multiple formats."""
+        for fmt in date_formats:
+            try:
+                return datetime.strptime(date_str.strip(), fmt)
+            except ValueError:
+                continue
+        # Log unrecognized date formats for debugging
+        print(f"Unrecognized date format: {date_str.strip()}")
+        return None
+
+    with open(input_file, "r") as file:
+        dates = file.readlines()
+    count = 0
+    for date in dates:
+        parsed_date = parse_date(date)
+        if parsed_date and parsed_date.weekday() == weekday_index:
+            count += 1
+    a=f"{count}"
+    result=a.strip("")
+    print("result",result, type(result))
+    with open(output_file, "w") as file:
+        file.write(result)  
+
+    return count
+  
 @app.post("/run")
 def task_runner(task: str):
-    if task.startswith("run "):
+    if 'run' in task.lower():
         try:
             # Parse the task string
             _, script_url, user_email = task.split()
@@ -146,14 +169,27 @@ def task_runner(task: str):
         except Exception as e:
             raise HTTPException(
                 status_code=400, detail=f"Invalid task format: {str(e)}")
-    elif "Format" in task:
-        # Call task_a2 to format the file
+    elif "format" in task.lower():
         try:
             return a2(file="/data/format.md") 
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to format file: {str(e)}"
             )
+    elif "Count" in task:
+        try:
+            # Extract the input file, output file, and weekday from the task string
+            input_file = task.split("`")[1]  # Extract the first file path
+            output_file = task.split("`")[3]  # Extract the second file path
+            weekday = task.split("number of ")[1].split(" ")[0]  # Extract the weekday
+            print("Count executed successfully", input_file, output_file, weekday)
+            # Call the function with the extracted parameters
+            count_weekdays(input_file, output_file, weekday)
+            return {"status": "Count executed successfully"}
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid task format: {str(e)}")
+
 
     url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
     headers = {

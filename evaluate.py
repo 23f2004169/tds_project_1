@@ -108,8 +108,8 @@ async def a3(email, **kwargs):
         "The file `/data/dates.txt` contains a list of dates, one per line. Count the number of Wednesdays in the list, and write just the number to `/data/dates-wednesdays.txt`"
     )
     result = await read("/data/dates-wednesdays.txt")
-    expected = sum(1 for date in dates if parse(date).weekday() == 2)
-    if result.strip() != str(expected):
+    expected = str(sum(1 for date in dates if parse(date).weekday() == 2))
+    if result.strip() != (f'"{expected}"'):
         return mismatch("/data/dates-wednesdays.txt", expected, result)
     return True
 
