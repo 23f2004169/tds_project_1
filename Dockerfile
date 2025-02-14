@@ -42,6 +42,8 @@ ENV PATH="/app/venv/bin:/root/.local/bin/:$PATH"
 COPY app.py /app
 COPY evaluate.py /app
 COPY datagen.py /app
+COPY tasksA.py /app
+COPY tasksB.py /app
 
 # Command to run the application
 CMD ["python3", "app.py"]
