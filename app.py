@@ -37,8 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-app = FastAPI()
+# app = FastAPI()
 load_dotenv()
 
 # @app.get('/ask')
@@ -97,8 +96,6 @@ function_definitions_llm = [
         "parameters": {
             "type": "object",
             "properties": {
-                # "filename": {"type": "string", "pattern": r"https?://.*\.py"},
-                # "targetfile": {"type": "string", "pattern": r".*/(.*\.py)"},
                 "email": {"type": "string", "pattern": r"[\w\.-]+@[\w\.-]+\.\w+"}
             },
             "required": ["filename", "targetfile", "email"]

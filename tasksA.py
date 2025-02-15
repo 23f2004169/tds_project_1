@@ -11,9 +11,7 @@ from fastapi import HTTPException
 # from dotenv import load_dotenv
 
 # load_dotenv()
-
 AIPROXY_TOKEN = os.getenv('AIPROXY_TOKEN')
-
 
 def A1(email="23f2004169@ds.study.iitm.ac.in"):
     try:
@@ -27,25 +25,44 @@ def A1(email="23f2004169@ds.study.iitm.ac.in"):
         return stdout
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail=f"Error: {e.stderr}")
-# A1()
+
+# def A2(prettier_version="prettier@3.4.2", filename="/data/format.md"):
+#     command = ["npx", prettier_version, "--write", filename]
+#     try:
+#         subprocess.run(command, check=True)
+#         print("Prettier executed successfully.")
+#     except subprocess.CalledProcessError as e:
+#         print(f"An error occurred: {e}")
+
+import subprocess
+
 def A2(prettier_version="prettier@3.4.2", filename="/data/format.md"):
-    command = [r"C:\Program Files\nodejs\npx.cmd", prettier_version, "--write", filename]
+    command = ["npx", prettier_version, "--write", filename]
     try:
-        subprocess.run(command, check=True)
+        # Run the command and capture output
+        result = subprocess.run(command, check=True, text=True, capture_output=True)
         print("Prettier executed successfully.")
+        print("Output:", result.stdout)
     except subprocess.CalledProcessError as e:
-        print(f"An error occurred: {e}")
+        # Print detailed error information
+        print(f"An error occurred while running Prettier: {e}")
+        print("Command:", " ".join(command))
+        print("Return Code:", e.returncode)
+        print("Error Output:", e.stderr)
+    except FileNotFoundError:
+        # Handle case where npx is not installed
+        print("Error: 'npx' is not installed or not found in PATH.")
+    except Exception as e:
+        # Catch any other unexpected errors
+        print(f"An unexpected error occurred: {e}")
 
 def A3(filename='/data/dates.txt', targetfile='/data/dates-wednesdays.txt', weekday=2):
     input_file = filename
     output_file = targetfile
     weekday = weekday
     weekday_count = 0
-
     with open(input_file, 'r') as file:
         weekday_count = sum(1 for date in file if parse(date).weekday() == int(weekday)-1)
-
-
     with open(output_file, 'w') as file:
         file.write(str(weekday_count))
 
@@ -122,39 +139,8 @@ import base64
 def png_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         base64_string = base64.b64encode(image_file.read()).decode('utf-8')
-    return base64_string
-# def A8():
-#     input_image = "data/credit_card.png"
-#     output_file = "data/credit-card.txt"
+    return base64_string 
 
-#     # Step 1: Extract text using OCR
-#     try:
-#         image = Image.open(input_image)
-#         extracted_text = pytesseract.image_to_string(image)
-#         print(f"Extracted text:\n{extracted_text}")
-#     except Exception as e:
-#         print(f"❌ Error reading or processing {input_image}: {e}")
-#         return
-
-#     # Step 2: Pass the extracted text to the LLM to validate and extract card number
-#     prompt = f"""Extract the credit card number from the following text. Respond with only the card number, without spaces:
-    
-#     {extracted_text}
-#     """
-#     try:
-#         card_number = ask_llm(prompt).strip()
-#         print(f"Card number extracted by LLM: {card_number}")
-#     except Exception as e:
-#         print(f"❌ Error processing with LLM: {e}")
-#         return
-
-#     # Step 3: Save the extracted card number to a text file
-#     try:
-#         with open(output_file, "w", encoding="utf-8") as file:
-#             file.write(card_number + "\n")
-#         print(f"✅ Credit card number saved to: {output_file}")
-#     except Exception as e:
-#         print(f"❌ Error writing {output_file}: {e}")
 
 def A8(filename='/data/credit_card.txt', image_path='/data/credit_card.png'):
     # Construct the request body for the AIProxy call
@@ -193,12 +179,8 @@ def A8(filename='/data/credit_card.txt', image_path='/data/credit_card.png'):
     result = response.json()
     # print(result); return None
     card_number = result['choices'][0]['message']['content'].replace(" ", "")
-
-    # Write the extracted card number to the output file
     with open(filename, 'w') as file:
         file.write(card_number) 
-# A8()
-
 
 
 def get_embedding(text):

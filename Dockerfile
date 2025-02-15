@@ -46,4 +46,4 @@ COPY tasksA.py /app
 COPY tasksB.py /app
 
 # Command to run the application
-CMD ["python3", "app.py"]
+CMD ["uv","run", "app.py"]
