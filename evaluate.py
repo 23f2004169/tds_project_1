@@ -85,7 +85,7 @@ async def a2(email: str, file: str = "/data/format.md", **kwargs):
         text=True,
         check=True,
         # Ensure npx is picked up from the PATH on Windows
-        # shell=True,
+        shell=True,
     ).stdout
     result = await run(
         f"""
