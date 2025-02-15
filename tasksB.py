@@ -2,8 +2,6 @@
 
 # B1 & B2: Security Checks
 import os
-
-
 def B12(filepath):
     if filepath.startswith('/data'):
         # raise PermissionError("Access outside /data is not allowed.")

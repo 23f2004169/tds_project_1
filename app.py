@@ -40,42 +40,6 @@ app.add_middleware(
 # app = FastAPI()
 load_dotenv()
 
-# @app.get('/ask')
-# def ask(prompt: str):
-#     """ Prompt Gemini to generate a response based on the given prompt. """
-#     gemini_api_key = os.getenv('gemini_api_key')
-#     if not gemini_api_key:
-#         return JSONResponse(content={"error": "GEMINI_API_KEY not set"}, status_code=500)
-
-#     # Read the contents of tasks.py
-#     with open('tasks.py', 'r') as file:
-#         tasks_content = file.read()
-    
-#     # Prepare the request data
-#     data = {
-#         "contents": [{
-#             "parts": [
-#                 {"text": f"Find the task function from here for the below prompt:\n{tasks_content}\n\nPrompt: {prompt}\n\n respond with the function_name and function_parameters with parameters in json format"},
-#             ]
-#         }]
-#     }
-    
-#     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
-#     headers = {
-#         "Content-Type": "application/json"
-#     }
-    
-#     response = requests.post(url, json=data, headers=headers)
-
-#     if response.status_code == 200:
-#         text_reponse = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-#         match = re.search(r'```json\n(.*?)\n```', text_reponse, re.DOTALL)
-#         text_reponse = match.group(1).strip() if match else text_reponse
-#         return json.loads(text_reponse)
-#         # return JSONResponse(content=response.json(), status_code=200)
-#     else:
-#         return JSONResponse(content={"error": "Failed to get response", "details": response.text}, status_code=response.status_code)
-
 @app.get("/ask")
 def ask(prompt: str):
     result = get_completions(prompt)
@@ -401,7 +365,74 @@ function_definitions_llm = [
             },
             "required": ["md_path", "output_path"]
         }
+    },
+    {
+    "name": "B4",
+    "description": "Clone a Git repository to the /data directory and make a commit with a specified message.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "repo_url": {
+                "type": "string",
+                "pattern": r"https?://.*",
+                "description": "URL of the Git repository to clone."
+            },
+            "commit_message": {
+                "type": "string",
+                "description": "Commit message to use for the commit."
+            }
+        },
+        "required": ["repo_url", "commit_message"]
     }
+},
+{
+    "name": "B8",
+    "description": "Transcribe audio from an MP3 file and save the transcription to a text file.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "audio_path": {
+                "type": "string",
+                "pattern": r".*/(.*\.mp3)",
+                "description": "Path to the MP3 audio file."
+            },
+            "output_path": {
+                "type": "string",
+                "pattern": r".*/(.*\.txt)",
+                "description": "Path to save the transcription text file."
+            }
+        },
+        "required": ["audio_path", "output_path"]
+    }
+},
+{
+    "name": "B10",
+    "description": "Filter a CSV file based on a column and value, and save the filtered data as JSON.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "input_file": {
+                "type": "string",
+                "pattern": r".*/(.*\.csv)",
+                "description": "Path to the input CSV file."
+            },
+            "column": {
+                "type": "string",
+                "description": "Column name to filter by."
+            },
+            "value": {
+                "type": "string",
+                "description": "Value to filter the column by."
+            },
+            "output_file": {
+                "type": "string",
+                "pattern": r".*/(.*\.json)",
+                "description": "Path to save the filtered JSON data."
+            }
+        },
+        "required": ["input_file", "column", "value", "output_file"]
+    }
+}
 
 ]
 
@@ -470,14 +501,20 @@ async def run_task(task: str):
             B12(**json.loads(arguments)) 
         if "B3" == task_code:
             B3(**json.loads(arguments))
+        if "B4" == task_code:
+            B4(**json.loads(arguments))
         if "B5" == task_code:
             B5(**json.loads(arguments))  
         if "B6" == task_code:
             B6(**json.loads(arguments)) 
         if "B7" == task_code:
             B7(**json.loads(arguments))
+        if "B8" == task_code:
+            B8(**json.loads(arguments))
         if "B9" == task_code:
-            B9(**json.loads(arguments))               
+            B9(**json.loads(arguments)) 
+        if "B10" == task_code:
+            B10(**json.loads(arguments))              
         return {"message": f"{task_code} Task '{task}' executed successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

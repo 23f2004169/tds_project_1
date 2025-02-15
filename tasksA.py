@@ -8,10 +8,11 @@ import os
 import requests
 from scipy.spatial.distance import cosine
 from fastapi import HTTPException
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# load_dotenv()
+load_dotenv()
 AIPROXY_TOKEN = os.getenv('AIPROXY_TOKEN')
+
 
 def A1(email="23f2004169@ds.study.iitm.ac.in"):
     try:
@@ -25,16 +26,6 @@ def A1(email="23f2004169@ds.study.iitm.ac.in"):
         return stdout
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail=f"Error: {e.stderr}")
-
-# def A2(prettier_version="prettier@3.4.2", filename="/data/format.md"):
-#     command = ["npx", prettier_version, "--write", filename]
-#     try:
-#         subprocess.run(command, check=True)
-#         print("Prettier executed successfully.")
-#     except subprocess.CalledProcessError as e:
-#         print(f"An error occurred: {e}")
-
-import subprocess
 
 def A2(prettier_version="prettier@3.4.2", filename="/data/format.md"):
     command = ["npx", prettier_version, "--write", filename]
@@ -141,7 +132,6 @@ def png_to_base64(image_path):
         base64_string = base64.b64encode(image_file.read()).decode('utf-8')
     return base64_string 
 
-
 def A8(filename='/data/credit_card.txt', image_path='/data/credit_card.png'):
     # Construct the request body for the AIProxy call
     body = {
@@ -219,6 +209,7 @@ def A9(filename='/data/comments.txt', output_filename='/data/comments-similar.tx
     with open(output_filename, 'w') as f:
         f.write(most_similar[0] + '\n')
         f.write(most_similar[1] + '\n')
+
 
 def A10(filename='/data/ticket-sales.db', output_filename='/data/ticket-sales-gold.txt', query="SELECT SUM(units * price) FROM tickets WHERE type = 'Gold'"):
     # Connect to the SQLite database
